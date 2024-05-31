@@ -10,6 +10,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using static Telegram.Bot.Types.InputFile;
 
 public class Promotion
 {
@@ -18,6 +19,7 @@ public class Promotion
     public string Category { get; set; }
     public DateTime ExpirationDate { get; set; }
     public string CouponCode { get; set; }
+    public string ImageUrl { get; set; }
 
     public override string ToString()
     {
@@ -30,12 +32,12 @@ public class Program
 {
     private static List<Promotion> promotions = new List<Promotion>
     {
-        new Promotion { Title = "Спеціальна знижка", Description = "Отримайте знижку 20% на всі товари до кінця тижня", Category = "Знижки", ExpirationDate = DateTime.Today.AddDays(7), CouponCode = "SPECIAL20" },
-        new Promotion { Title = "Безкоштовна доставка", Description = "При замовленні від 500 гривень  безкоштовна доставка", Category = "Доставка", ExpirationDate = DateTime.Today.AddDays(14), CouponCode = "FREEDELIVERY"},
-        new Promotion { Title = "Літній розпродаж", Description = "Великі знижки на всю літню колекцію", Category = "Знижки", ExpirationDate = DateTime.Today.AddDays(30), CouponCode = "SUMMER50" },
-        new Promotion { Title = "Подарунок за покупку", Description = "Отримайте подарунок за кожну покупку вартістю від 1000 гривень", Category = "Подарунки", ExpirationDate = DateTime.Today.AddDays(10), CouponCode = "GIFT1000" },
-        new Promotion { Title = "Ексклюзивна пропозиція для клієнтів", Description = "Тільки для наших постійних клієнтів: додаткова знижка 15% на перший замовлення місяця", Category = "Знижки", ExpirationDate = DateTime.Today.AddDays(20), CouponCode = "LOYALTY15" },
-        new Promotion { Title = "Знижка на техніку", Description = "Спеціальна знижка 10% на всю техніку в нашому магазині", Category = "Електроніка", ExpirationDate = DateTime.Today.AddDays(15), CouponCode = "TECHSALE10" }
+         new Promotion { Title = "Спеціальна знижка", Description = "Отримайте знижку 20% на всі товари до кінця тижня", Category = "Знижки", ExpirationDate = DateTime.Today.AddDays(7), CouponCode = "SPECIAL20", ImageUrl = "https://avrora.ua/design/themes/restudiotheme/media/open-graph.webp?v=2" },
+        new Promotion { Title = "Безкоштовна доставка", Description = "При замовленні від 500 гривень  безкоштовна доставка", Category = "Доставка", ExpirationDate = DateTime.Today.AddDays(14), CouponCode = "FREEDELIVERY", ImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTN0TrqQ6cM0IhjPz_1k_vt8dcZIl332YHwAA&s" },
+        new Promotion { Title = "Літній розпродаж", Description = "Великі знижки на всю літню колекцію", Category = "Знижки", ExpirationDate = DateTime.Today.AddDays(30), CouponCode = "SUMMER50", ImageUrl = "https://media.marktkauf.de/products/2493/943/000/2493943000_prod_001?im=Resize=(450,450),type=downsize,aspect=fit;Crop,size=(450,450),gravity=Center,allowExpansion;BackgroundColor,color=ffffff;UnsharpMask,gain=1.0,threshold=0.05;" },
+        new Promotion { Title = "Подарунок за покупку", Description = "Отримайте подарунок за кожну покупку вартістю від 1000 гривень", Category = "Подарунки", ExpirationDate = DateTime.Today.AddDays(10), CouponCode = "GIFT1000", ImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNRmL-JdONGOOYhIcy0DcN8tOTVdRPssF8nQ&s" },
+        new Promotion { Title = "Ексклюзивна пропозиція для клієнтів", Description = "Тільки для наших постійних клієнтів: додаткова знижка 15% на перший замовлення місяця", Category = "Знижки", ExpirationDate = DateTime.Today.AddDays(20), CouponCode = "LOYALTY15", ImageUrl = "https://i.makeup.com.ua/bc/8/8r/8roxpzcgsyjk.png" },
+        new Promotion { Title = "Знижка на техніку", Description = "Спеціальна знижка 10% на всю техніку в нашому магазині", Category = "Електроніка", ExpirationDate = DateTime.Today.AddDays(15), CouponCode = "TECHSALE10", ImageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNqWX76evu3Ing3TLxwGCR2topiFaZnGT3kw&s" }
     };
 
 
@@ -135,9 +137,9 @@ public class Program
     {
         var availablePromotionsMessage = "Виберіть акцію, на яку хочете отримати промокод:\n\n";
 
-       // Створення списку кнопок вибору акцій
-       var keyboardButtons = promotions.Select((p) => new[]
-        {
+        // Створення списку кнопок вибору акцій
+        var keyboardButtons = promotions.Select((p) => new[]
+         {
         new KeyboardButton(p.Title)
     }).ToList();
 
@@ -201,15 +203,13 @@ public class Program
             var messageText = $"Акції у категорії '{category}':\n\n";
             foreach (var promotion in filteredPromotions)
             {
-                messageText += promotion.ToString() + "\n\n";
-            }
-            Console.WriteLine("Sending promotions");
-            await botClient.SendTextMessageAsync(
-                chatId: chatId,
-                text: messageText,
-                cancellationToken: cancellationToken,
-                parseMode: ParseMode.MarkdownV2);
-            Console.WriteLine("Promotions sent");
+                await botClient.SendPhotoAsync(
+                    chatId: chatId,
+                    photo: InputFile.FromUri(promotion.ImageUrl),
+                    caption: promotion.ToString(),
+                    parseMode: ParseMode.Markdown,
+                    cancellationToken: cancellationToken);
+            }             
 
             // Після відправлення акцій за категорією, викликаємо метод SendMainMenuAsync для повернення до головного меню
             await SendMainMenuAsync(botClient, chatId, cancellationToken);
@@ -231,11 +231,14 @@ public class Program
     private static async Task SendCouponAsync(ITelegramBotClient botClient, long chatId, Promotion promotion, CancellationToken cancellationToken)
     {
         var messageText = $"Ваш промокод для акції '{promotion.Title}': `{promotion.CouponCode}`\nДля отримання знижки перейдіть на наш сайт та використовуйте цей промокод при оформленні замовлення";
-        await botClient.SendTextMessageAsync(
+        var message = await botClient.SendPhotoAsync(
             chatId: chatId,
-            text: messageText,
-            cancellationToken: cancellationToken,
-            parseMode: ParseMode.MarkdownV2);
+            photo: InputFile.FromUri(promotion.ImageUrl),
+            caption: $"Купон для акції {promotion.Title}: {promotion.CouponCode}",
+            parseMode: ParseMode.Markdown,
+            cancellationToken: cancellationToken);
+        await SendMainMenuAsync(botClient, chatId, cancellationToken);
+
     }
 
     private static async Task SendAllPromotionsAsync(ITelegramBotClient botClient, long chatId, CancellationToken cancellationToken)
@@ -244,14 +247,14 @@ public class Program
         foreach (var promotion in promotions)
         {
             messageText += promotion.ToString() + "\n\n";
+            await botClient.SendPhotoAsync(
+                chatId: chatId,
+                photo: InputFile.FromUri(promotion.ImageUrl),
+                caption: promotion.ToString(),
+                parseMode: ParseMode.Markdown,
+                cancellationToken: cancellationToken);
         }
         Console.WriteLine(messageText);
-
-        await botClient.SendTextMessageAsync(
-            chatId: chatId,
-            text: messageText,
-            cancellationToken: cancellationToken,
-            parseMode: ParseMode.MarkdownV2);
 
         Console.WriteLine("Усі рекламні повідомлення надіслано");
     }
@@ -269,3 +272,5 @@ public class Program
         return Task.CompletedTask;
     }
 }
+
+
